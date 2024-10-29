@@ -124,7 +124,7 @@ public class AutonomousCharacter : NPC
     public MCTS MCTSDecisionMaking { get; set; } 
     public QLearning QLearning { get; set;} 
 
-    //public PolicyLearning PolicyLearning { get; set; }
+    public REINFORCE ReinforceLearningNN { get; set; }
     public GameObject NearEnemy { get; private set; }
 
     //For Reinforcement Learning
@@ -289,6 +289,10 @@ public class AutonomousCharacter : NPC
             else if (this.TabularQLearningActive)
             {
                 throw new Exception("Needs to be Created");
+            }
+            else if (this.NNLearningActive)
+            {
+                //this.ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
             }
         }
 
