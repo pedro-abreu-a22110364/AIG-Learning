@@ -60,24 +60,20 @@ public class REINFORCE
         List<float> returns = new List<float>();
         float cumulativeReward = 0f;
 
-        // Calculate returns in reverse
         for (int t = rewards.Count - 1; t >= 0; t--)
         {
             cumulativeReward = rewards[t] + discountFactor * cumulativeReward;
-            returns.Insert(0, cumulativeReward); // Maintain order
+            returns.Insert(0, cumulativeReward);
         }
 
-        // Normalize returns for stability (optional)
         NormalizeReturns(returns);
 
-        // Update the policy using the calculated returns
         for (int t = 0; t < rewards.Count; t++)
         {
-            float[] state = episodeStates[t]; // Retrieve stored state at time step t
-            int action = episodeActions[t];   // Retrieve stored action at time step t
+            float[] state = episodeStates[t];
+            int action = episodeActions[t];
             float returnT = returns[t];
 
-            // Call Train method to update the network based on state, action, and return
             Train(state, action, returnT);
         }
     }
@@ -89,7 +85,7 @@ public class REINFORCE
 
         for (int i = 0; i < returns.Count; i++)
         {
-            returns[i] = (returns[i] - meanReturn) / (stdDevReturn + 1e-5f); // Avoid division by zero
+            returns[i] = (returns[i] - meanReturn) / (stdDevReturn + 1e-5f);
         }
     }
 
@@ -102,7 +98,6 @@ public class REINFORCE
         float[] target = new float[actionProbabilities.Length];
         target[action] = logProbability * returnT;
 
-        // Train the policy network using the state and target
         policyNetwork.Train(state, target, learningRate);
     }
 }

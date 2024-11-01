@@ -14,6 +14,7 @@ using static GameManager;
 using Action = Assets.Scripts.IAJ.Unity.DecisionMaking.HeroActions.Action;
 using Assets.Scripts.IAJ.Unity.DecisionMaking;
 using RL;
+using System.Linq;
 
 public class AutonomousCharacter : NPC
 {
@@ -635,8 +636,10 @@ public class AutonomousCharacter : NPC
     {
         float[] currentState = GetState();
 
+        var executableActions = Actions.Where(action => action.CanExecute()).ToList();
+
         int actionIndex = ReinforceLearningNN.SelectAction(currentState);
-        Action selectedAction = Actions[actionIndex];
+        Action selectedAction = executableActions[actionIndex];
 
         float reward = ExecuteAction(selectedAction);
         ReinforceLearningNN.StoreReward(reward);
@@ -663,9 +666,9 @@ public class AutonomousCharacter : NPC
     private float ExecuteAction(Action selectedAction)
     {
         // Execute the action and calculate the reward based on the outcome
-        selectedAction.Execute();
+        if (selectedAction.CanExecute())
+            selectedAction.Execute();
 
-        // Example reward logic (customize for your game logic)
         float reward = 0f;
         if ((selectedAction.Name == "SwordAttack" || selectedAction.Name.Contains("EnemyAttack") || selectedAction.Name == "DivineSmite") && selectedAction is WalkToTargetAndExecuteAction)
         {
