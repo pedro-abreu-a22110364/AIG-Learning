@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class NeuralNetwork
@@ -16,10 +17,8 @@ public class NeuralNetwork
         this.layerSizes = layerSizes;
         random = new System.Random();
 
-        // Set activation function based on input
         SetActivationFunction(activation);
 
-        // Initialize weights and biases
         weights = new List<float[,]>();
         biases = new List<float[]>();
 
@@ -55,7 +54,7 @@ public class NeuralNetwork
         float[,] matrix = new float[rows, cols];
         for (int i = 0; i < rows; i++)
             for (int j = 0; j < cols; j++)
-                matrix[i, j] = (float)(random.NextDouble() * 2 - 1);  // Random values between -1 and 1
+                matrix[i, j] = (float)(random.NextDouble() * 2 - 1);
         return matrix;
     }
 
@@ -84,7 +83,6 @@ public class NeuralNetwork
         {
             float[] z = Add(MatrixVectorProduct(weights[i], activations), biases[i]);
 
-            // Apply the chosen activation function for hidden layers, softmax for the final layer
             if (i == weights.Count - 1)
             {
                 activations = Softmax(z);
@@ -98,21 +96,18 @@ public class NeuralNetwork
         return activations;
     }
 
-    // Softmax function to convert final layer output to probabilities
     private float[] Softmax(float[] z)
     {
-        float max = Mathf.Max(z); // For numerical stability
+        float max = Mathf.Max(z);
         float sumExp = 0f;
         float[] softmaxOutput = new float[z.Length];
 
-        // Compute the softmax of each element
         for (int i = 0; i < z.Length; i++)
         {
-            softmaxOutput[i] = Mathf.Exp(z[i] - max); // Shifted to avoid overflow
+            softmaxOutput[i] = Mathf.Exp(z[i] - max);
             sumExp += softmaxOutput[i];
         }
 
-        // Normalize by dividing by the sum of exponentials
         for (int i = 0; i < softmaxOutput.Length; i++)
         {
             softmaxOutput[i] /= sumExp;
@@ -120,7 +115,6 @@ public class NeuralNetwork
 
         return softmaxOutput;
     }
-
 
     private float[] ApplyActivation(float[] z)
     {
@@ -157,7 +151,6 @@ public class NeuralNetwork
 
     public void Train(float[] input, float[] target, float learningRate)
     {
-        // Feedforward and capture intermediate activations
         List<float[]> activations = new List<float[]> { input };
         List<float[]> zs = new List<float[]>();
 
@@ -170,7 +163,6 @@ public class NeuralNetwork
             activations.Add(activation);
         }
 
-        // Backward pass
         float[] delta = CostDerivative(activations[^1], target);
         for (int l = weights.Count - 1; l >= 0; l--)
         {
@@ -178,7 +170,6 @@ public class NeuralNetwork
             delta = MultiplyElementWise(delta, sp);
             float[,] deltaWeight = OuterProduct(delta, activations[l]);
 
-            // Update weights and biases
             for (int i = 0; i < weights[l].GetLength(0); i++)
                 for (int j = 0; j < weights[l].GetLength(1); j++)
                     weights[l][i, j] -= learningRate * deltaWeight[i, j];
@@ -234,4 +225,108 @@ public class NeuralNetwork
                 transposed[j, i] = matrix[i, j];
         return transposed;
     }
+
+    public int OutputSize => layerSizes[^1];
+
+    public void SaveModel()
+    {
+        string filePath = System.IO.Path.Combine(Application.persistentDataPath, "model.dat");
+
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            writer.WriteLine(layerSizes.Length);
+            foreach (var layerSize in layerSizes)
+            {
+                writer.WriteLine(layerSize);
+            }
+
+            // Save weights
+            for (int i = 0; i < weights.Count; i++)
+            {
+                int rows = weights[i].GetLength(0);
+                int cols = weights[i].GetLength(1);
+                writer.WriteLine(rows);
+                writer.WriteLine(cols);
+                for (int r = 0; r < rows; r++)
+                {
+                    for (int c = 0; c < cols; c++)
+                    {
+                        writer.Write(weights[i][r, c] + (c < cols - 1 ? "," : ""));
+                    }
+                    writer.WriteLine();
+                }
+            }
+
+            // Save biases
+            for (int i = 0; i < biases.Count; i++)
+            {
+                writer.WriteLine(biases[i].Length);
+                for (int j = 0; j < biases[i].Length; j++)
+                {
+                    writer.Write(biases[i][j] + (j < biases[i].Length - 1 ? "," : ""));
+                }
+                writer.WriteLine();
+            }
+        }
+
+        Debug.Log($"Model saved to: {filePath}");
+    }
+
+    public void LoadModel()
+    {
+        string filePath = System.IO.Path.Combine(Application.persistentDataPath, "model.dat");
+
+        if (File.Exists(filePath))
+        {
+            using (StreamReader reader = new StreamReader(filePath))
+            {
+                // Read the number of layers
+                int layerCount = int.Parse(reader.ReadLine());
+                layerSizes = new int[layerCount];
+
+                // Read layer sizes
+                for (int i = 0; i < layerCount; i++)
+                {
+                    layerSizes[i] = int.Parse(reader.ReadLine());
+                }
+
+                // Read weights
+                for (int i = 0; i < layerCount - 1; i++)
+                {
+                    int rows = int.Parse(reader.ReadLine());
+                    int cols = int.Parse(reader.ReadLine());
+                    weights[i] = new float[rows, cols];
+
+                    for (int r = 0; r < rows; r++)
+                    {
+                        string[] values = reader.ReadLine().Split(',');
+                        for (int c = 0; c < cols; c++)
+                        {
+                            weights[i][r, c] = float.Parse(values[c]);
+                        }
+                    }
+                }
+
+                // Read biases
+                for (int i = 0; i < layerCount - 1; i++)
+                {
+                    int biasSize = int.Parse(reader.ReadLine());
+                    biases[i] = new float[biasSize];
+                    string[] values = reader.ReadLine().Split(',');
+
+                    for (int j = 0; j < biasSize; j++)
+                    {
+                        biases[i][j] = float.Parse(values[j]);
+                    }
+                }
+            }
+
+            Debug.Log($"Model loaded successfully from: {filePath}");
+        }
+        else
+        {
+            Debug.LogError($"Model file not found: {filePath}");
+        }
+    }
+
 }

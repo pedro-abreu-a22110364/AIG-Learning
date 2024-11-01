@@ -86,6 +86,8 @@ public class AutonomousCharacter : NPC
 
     [Header("RL Options")]
     public RLOptions RLLOptions;
+    public int RLL_NumberOfLayers = 1;
+    public int[] layerSizes;
 
     [Header("Decision Algorithm Options")]
     public bool ReactToEnemy;
@@ -292,7 +294,15 @@ public class AutonomousCharacter : NPC
             }
             else if (this.NNLearningActive)
             {
-                //this.ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+                layerSizes = new int[RLL_NumberOfLayers];
+                System.Random random = new System.Random();
+
+                for (int i = 0; i < RLL_NumberOfLayers; i++)
+                {
+                    layerSizes[i] = random.Next(5, 100);
+                }
+                this.ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+                this.ReinforceLearningNN.policyNetwork.SaveModel();
             }
         }
 
@@ -372,6 +382,10 @@ public class AutonomousCharacter : NPC
             {
                 throw new Exception("Tabular Q-Learning Needs to be initialized...");
             }
+            else if (NNLearningActive)
+            {
+               this.ReinforceLearningNN.policyNetwork.LoadModel();
+            }
         }
 
         if (this.ControlledByPlayer)
@@ -408,6 +422,10 @@ public class AutonomousCharacter : NPC
         else if (this.GOBActive)
         {
             this.UpdateGOB();
+        }
+        else if (this.NNLearningActive)
+        {
+            this.UpdateNN();
         }
         //ToDo Update your RL algorithms here...
  
@@ -613,6 +631,64 @@ public class AutonomousCharacter : NPC
         }
     }
 
+    private void UpdateNN()
+    {
+        float[] currentState = GetState();
+
+        int actionIndex = ReinforceLearningNN.SelectAction(currentState);
+        Action selectedAction = Actions[actionIndex];
+
+        float reward = ExecuteAction(selectedAction);
+        ReinforceLearningNN.StoreReward(reward);
+
+        if (baseStats.HP == 0) // At the end of an episode
+        {
+            ReinforceLearningNN.UpdatePolicy();
+            ReinforceLearningNN.ResetRewards(); 
+        }
+    }
+
+    private float[] GetState()
+    {
+
+        return new float[]
+        {
+        baseStats.HP,
+        baseStats.Mana,
+        transform.position.x,
+        transform.position.y,
+        };
+    }
+
+    private float ExecuteAction(Action selectedAction)
+    {
+        // Execute the action and calculate the reward based on the outcome
+        selectedAction.Execute();
+
+        // Example reward logic (customize for your game logic)
+        float reward = 0f;
+        if ((selectedAction.Name == "SwordAttack" || selectedAction.Name.Contains("EnemyAttack") || selectedAction.Name == "DivineSmite") && selectedAction is WalkToTargetAndExecuteAction)
+        {
+            var action = selectedAction as WalkToTargetAndExecuteAction;
+            if (!action.Target.activeInHierarchy)
+            {
+                reward += 10f; // Reward for defeating an enemy
+            }
+        }
+        else if (selectedAction.Name == "GetHealthPotion")
+        {
+            reward += 5f; // Reward for healing action
+        }
+        else
+        {
+            reward -= 1f; // Penalty for non-productive actions
+        }
+
+        return reward;
+    }
+
+
+
     // You'll need this, when using MCTS
     /*private void UpdateMCTS(MCTS mCTS)
     {
@@ -675,11 +751,17 @@ public class AutonomousCharacter : NPC
     }*/
 
 
+
+
     public override void Restart()
     {
         if (TabularQLearningActive && RLLOptions == RLOptions.TrainAndSave)
         {
             //ToDo 
+        }
+        else if (NNLearningActive && RLLOptions == RLOptions.TrainAndSave)
+        {
+            ReinforceLearningNN.policyNetwork.SaveModel();
         }
         base.Restart();
         LevelingUp = false;
