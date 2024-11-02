@@ -41,6 +41,7 @@ public class REINFORCE
         return actionProbabilities.Length - 1;
     }
 
+
     public void StoreReward(float reward)
     {
         rewards.Add(reward);

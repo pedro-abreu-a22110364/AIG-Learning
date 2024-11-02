@@ -735,6 +735,7 @@ public class AutonomousCharacter : NPC
         {
         baseStats.HP,
         baseStats.Mana,
+        baseStats.Money,
         transform.position.x,
         transform.position.y,
         };
@@ -742,26 +743,23 @@ public class AutonomousCharacter : NPC
 
     private float ExecuteAction(Action selectedAction)
     {
-        // Execute the action and calculate the reward based on the outcome
+        // Execute the action
         if (selectedAction.CanExecute())
             selectedAction.Execute();
 
+        // Initialize the reward variable
         float reward = 0f;
-        if ((selectedAction.Name == "SwordAttack" || selectedAction.Name.Contains("EnemyAttack") || selectedAction.Name == "DivineSmite") && selectedAction is WalkToTargetAndExecuteAction)
+
+        // Check character states to calculate rewards or penalties
+        if (this.baseStats.HP <= 0 || this.baseStats.Time >= GameConstants.TIME_LIMIT)
         {
-            var action = selectedAction as WalkToTargetAndExecuteAction;
-            if (!action.Target.activeInHierarchy)
-            {
-                reward += 10f; // Reward for defeating an enemy
-            }
+            reward -= 100f; // Penalty for dying or time out
+            this.Reward = reward;
         }
-        else if (selectedAction.Name == "GetHealthPotion")
+        else if (this.baseStats.Money >= 25)
         {
-            reward += 5f; // Reward for healing action
-        }
-        else
-        {
-            reward -= 1f; // Penalty for non-productive actions
+            reward += 100f; // Reward for victory
+            this.Reward = reward;
         }
 
         return reward;

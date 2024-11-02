@@ -62,7 +62,7 @@ public class NeuralNetwork
     {
         float[] array = new float[size];
         for (int i = 0; i < size; i++)
-            array[i] = (float)(random.NextDouble() * 2 - 1);
+            array[i] = 0; // Initialize biases to zero
         return array;
     }
 
