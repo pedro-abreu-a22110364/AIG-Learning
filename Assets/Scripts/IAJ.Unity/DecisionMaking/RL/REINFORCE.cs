@@ -12,7 +12,7 @@ public class REINFORCE
     private List<float[]> episodeStates = new List<float[]>(); // Store states from each episode
     private List<int> episodeActions = new List<int>(); // Store actions taken in each episode
 
-    public REINFORCE(int[] layerSizes, float learningRate = 0.01f)
+    public REINFORCE(int[] layerSizes, float learningRate = 0.05f)
     {
         this.learningRate = learningRate;
         policyNetwork = new NeuralNetwork(layerSizes, "sigmoid");

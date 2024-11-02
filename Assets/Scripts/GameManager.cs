@@ -229,7 +229,7 @@ public class GameManager : MonoBehaviour
                 {
                     //there was an hit, enemy is destroyed, gain xp
                     
-                    this.enemies.Remove(enemy);
+                    //this.enemies.Remove(enemy);
                     this.DisposableObjects[enemy.name] = null;
                     enemy.SetActive(false);
                 }
@@ -237,7 +237,7 @@ public class GameManager : MonoBehaviour
             else
             {
                 damage = enemyData.SimpleDamage;
-                this.enemies.Remove(enemy);
+                //this.enemies.Remove(enemy);
                 this.DisposableObjects[enemy.name] = null;
                 enemy.SetActive(false);
             }
@@ -282,7 +282,7 @@ public class GameManager : MonoBehaviour
                     {
                         //there was an hit, enemy is destroyed, gain xp
                         //RemoveOrcFromFormation(monster);
-                        this.enemies.Remove(enemy);
+                        //this.enemies.Remove(enemy);
                         this.DisposableObjects[enemy.name] = null;
                         enemy.SetActive(false);
                     }
@@ -291,7 +291,7 @@ public class GameManager : MonoBehaviour
                 {
                     damage = monster.stats.SimpleDamage;
                     //RemoveOrcFromFormation(monster);
-                    this.enemies.Remove(enemy);
+                    //this.enemies.Remove(enemy);
                     this.DisposableObjects[enemy.name] = null;
                     enemy.SetActive(false);
                 }
@@ -320,7 +320,7 @@ public class GameManager : MonoBehaviour
             {
                 this.Character.baseStats.XP += 3;
                 this.Character.AddToDiary(" I Smited " + enemy.name);
-                this.enemies.Remove(enemy);
+                //this.enemies.Remove(enemy);
                 this.DisposableObjects[enemy.name] = null;
                 enemy.SetActive(false);
                 //Object.Destroy(enemy);
@@ -348,7 +348,7 @@ public class GameManager : MonoBehaviour
         if (chest != null && chest.activeSelf && InChestRange(chest))
         {
             this.Character.AddToDiary(" I opened  " + chest.name);
-            this.chests.Remove(chest);
+            //this.chests.Remove(chest);
             this.DisposableObjects[chest.name] = null;
             chest.SetActive(false);
             this.Character.baseStats.Money += 5;

@@ -15,6 +15,7 @@ using Action = Assets.Scripts.IAJ.Unity.DecisionMaking.HeroActions.Action;
 using Assets.Scripts.IAJ.Unity.DecisionMaking;
 using RL;
 using System.Linq;
+using System.IO;
 
 public class AutonomousCharacter : NPC
 {
@@ -87,7 +88,8 @@ public class AutonomousCharacter : NPC
 
     [Header("RL Options")]
     public RLOptions RLLOptions;
-    public int RLL_NumberOfLayers = 1;
+    
+    public int RLL_NumberOfLayers = 10;
     public int[] layerSizes;
 
     [Header("Decision Algorithm Options")]
@@ -174,6 +176,8 @@ public class AutonomousCharacter : NPC
         //This is the actual speed of the agent
         lineRenderer = this.GetComponent<LineRenderer>();
         playerText.text = "";
+
+        string modelFilePath = Path.Combine(Application.persistentDataPath, "model.dat");
 
 
         // Initializing UI Text
@@ -295,23 +299,55 @@ public class AutonomousCharacter : NPC
             }
             else if (this.NNLearningActive)
             {
-                layerSizes = new int[RLL_NumberOfLayers];
-                System.Random random = new System.Random();
-
-                for (int i = 0; i < RLL_NumberOfLayers; i++)
+                switch (RLLOptions)
                 {
-                    layerSizes[i] = random.Next(5, 100);
+                    case RLOptions.LoadAndPlay:
+                        if (File.Exists(modelFilePath))
+                        {
+                            // Load the model
+                            ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+                            ReinforceLearningNN.policyNetwork.LoadModel();
+                            Debug.Log("Model loaded successfully for play.");
+                        }
+                        else
+                        {
+                            Debug.LogError("Model file not found for LoadAndPlay option.");
+                        }
+                        break;
+
+                    case RLOptions.TrainAndSave:
+                        // Initialize a new model, then save it
+                        InitializeNewModel();
+                        ReinforceLearningNN.policyNetwork.SaveModel();
+                        Debug.Log("New model created and saved for training.");
+                        break;
+
+                    default:
+                        Debug.LogError("Invalid RL option selected.");
+                        break;
                 }
-                this.ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
-                this.ReinforceLearningNN.policyNetwork.SaveModel();
             }
         }
 
         DiaryText.text += "My Diary \n I awoke. What a wonderful day to kill Monsters! \n";
     }
 
+    private void InitializeNewModel()
+    {
+        layerSizes = new int[RLL_NumberOfLayers];
+        System.Random random = new System.Random();
+
+        for (int i = 0; i < RLL_NumberOfLayers; i++)
+        {
+            layerSizes[i] = random.Next(5, 100);
+        }
+
+        ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+    }
+
     void FixedUpdate()
     {
+        string modelFilePath = Path.Combine(Application.persistentDataPath, "model.dat");
         if (GameManager.Instance.gameEnded)
         {
             if (episodeCounter < MaxEpisodes)
@@ -320,9 +356,20 @@ public class AutonomousCharacter : NPC
                 GameManager.Instance.RestartGame();
                 Debug.Log("Episode: " +  episodeCounter);
 
+                if (NNLearningActive)
+                {
+                    ReinforceLearningNN.UpdatePolicy();
+                    ReinforceLearningNN.ResetRewards();
+                }
                 //Do here end-of-episode stuff
 
                 return;
+            }
+
+            if (RLLOptions == RLOptions.TrainAndSave && NNLearningActive)
+            {
+                ReinforceLearningNN.policyNetwork.SaveModel();
+                Debug.Log("Model saved at end of training.");
             }
 
             //Do here end-of-training stuff
@@ -385,7 +432,31 @@ public class AutonomousCharacter : NPC
             }
             else if (NNLearningActive)
             {
-               this.ReinforceLearningNN.policyNetwork.LoadModel();
+                switch (RLLOptions)
+                {
+                    case RLOptions.LoadAndPlay:
+                        if (File.Exists(modelFilePath))
+                        {
+                            // Load the model
+                            ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+                            ReinforceLearningNN.policyNetwork.LoadModel();
+                            Debug.Log("Model loaded successfully for play.");
+                        }
+                        else
+                        {
+                            Debug.LogError("Model file not found for LoadAndPlay option.");
+                        }
+                        break;
+
+                    case RLOptions.TrainAndSave:
+                        ReinforceLearningNN.policyNetwork.SaveModel();
+                        Debug.Log("Model saved.");
+                        break;
+
+                    default:
+                        Debug.LogError("Invalid RL option selected.");
+                        break;
+                }
             }
         }
 
@@ -644,11 +715,17 @@ public class AutonomousCharacter : NPC
         float reward = ExecuteAction(selectedAction);
         ReinforceLearningNN.StoreReward(reward);
 
-        if (baseStats.HP == 0) // At the end of an episode
+        /*if (baseStats.HP == 0) // At the end of an episode
         {
             ReinforceLearningNN.UpdatePolicy();
-            ReinforceLearningNN.ResetRewards(); 
-        }
+            ReinforceLearningNN.ResetRewards();
+
+            if (RLLOptions == RLOptions.TrainAndSave)
+            {
+                ReinforceLearningNN.policyNetwork.SaveModel();
+                Debug.Log("Model saved at end of episode.");
+            }
+        }*/
     }
 
     private float[] GetState()
