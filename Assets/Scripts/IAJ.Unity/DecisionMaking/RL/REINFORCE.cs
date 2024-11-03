@@ -15,13 +15,16 @@ public class REINFORCE
     public REINFORCE(int[] layerSizes, float learningRate = 0.05f)
     {
         this.learningRate = learningRate;
-        policyNetwork = new NeuralNetwork(layerSizes, "sigmoid");
+        policyNetwork = new NeuralNetwork(layerSizes, "tanh");
         random = new System.Random();
     }
 
     public int SelectAction(float[] state)
     {
+        // Get action probabilities only for executable actions
         float[] actionProbabilities = policyNetwork.Feedforward(state);
+
+        // Sample action based on probabilities
         float randomValue = (float)random.NextDouble();
         float cumulativeProbability = 0f;
 
@@ -37,9 +40,10 @@ public class REINFORCE
             }
         }
 
-        // Fallback to the last action if something goes wrong
-        return actionProbabilities.Length - 1;
+        // Fallback to the most probable action if something goes wrong
+        return Array.IndexOf(actionProbabilities, actionProbabilities.Max());
     }
+
 
 
     public void StoreReward(float reward)

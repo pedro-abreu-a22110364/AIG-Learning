@@ -12,7 +12,7 @@ public class NeuralNetwork
     private Func<float, float> activationFunction;
     private Func<float, float> activationFunctionDerivative;
 
-    public NeuralNetwork(int[] layerSizes, string activation = "sigmoid")
+    public NeuralNetwork(int[] layerSizes, string activation = "tanh")
     {
         this.layerSizes = layerSizes;
         random = new System.Random();

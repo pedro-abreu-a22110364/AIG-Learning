@@ -394,13 +394,14 @@ public class AutonomousCharacter : NPC
 
     private void InitializeNewModel()
     {
-        layerSizes = new int[RLL_NumberOfLayers];
+        /*layerSizes = new int[RLL_NumberOfLayers];
         System.Random random = new System.Random();
 
         for (int i = 0; i < RLL_NumberOfLayers; i++)
         {
             layerSizes[i] = random.Next(5, 100);
-        }
+        }*/
+        layerSizes = new int[] { 6, 10, 10, 10, 3 };
 
         ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
     }
@@ -808,7 +809,9 @@ public class AutonomousCharacter : NPC
         {
         baseStats.HP,
         baseStats.Mana,
+        baseStats.Time,
         baseStats.Money,
+        baseStats.XP,
         transform.position.x,
         transform.position.y,
         };
@@ -827,12 +830,12 @@ public class AutonomousCharacter : NPC
         if (this.baseStats.HP <= 0 || this.baseStats.Time >= GameConstants.TIME_LIMIT)
         {
             reward -= 100f; // Penalty for dying or time out
-            this.Reward = reward;
+            //this.Reward = reward;
         }
         else if (this.baseStats.Money >= 25)
         {
             reward += 100f; // Reward for victory
-            this.Reward = reward;
+            //this.Reward = reward;
         }
 
         return reward;
