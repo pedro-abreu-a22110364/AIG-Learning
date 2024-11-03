@@ -47,11 +47,11 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking
             this.bestAction = null;
         }
 
-        public Action ChooseAction(int stateIndex)
+        public int ChooseAction(int stateIndex)
         {
             if (UnityEngine.Random.value < epsilon)
             {
-                return actions[UnityEngine.Random.Range(0, actions.Count)];
+                return UnityEngine.Random.Range(0, actions.Count);
             }
             else
             {
@@ -66,7 +66,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking
                         bestActionIndex = i;
                     }
                 }
-                return actions[bestActionIndex];
+                return bestActionIndex;
             }
         }
 
@@ -90,13 +90,12 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking
                 int currentStateIndex = UnityEngine.Random.Range(0, states.Count);
                 for (int step = 0; step < maxSteps; step++)
                 {
-                    Action action = ChooseAction(currentStateIndex);
-                    int actionIndex = actions.IndexOf(action);
+                    int action = ChooseAction(currentStateIndex);
 
-                    float reward = GetRewardForAction(currentStateIndex, action);
-                    int nextStateIndex = GetNextState(currentStateIndex, action);
+                    float reward = GetRewardForAction(currentStateIndex, actions[action]);
+                    int nextStateIndex = GetNextState(currentStateIndex, actions[action]);
 
-                    UpdateQValue(currentStateIndex, actionIndex, nextStateIndex, reward);
+                    UpdateQValue(currentStateIndex, action, nextStateIndex, reward);
 
                     currentStateIndex = nextStateIndex;
 

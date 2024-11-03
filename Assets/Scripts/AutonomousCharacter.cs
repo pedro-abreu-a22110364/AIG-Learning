@@ -17,6 +17,7 @@ using RL;
 using System.Linq;
 using System.IO;
 using static UnityEditor.VersionControl.Asset;
+using System.Data.SqlTypes;
 
 public class AutonomousCharacter : NPC
 {
@@ -379,11 +380,6 @@ public class AutonomousCharacter : NPC
 
         foreach (var level in levels)
         {
-            int maxHP = level * 10;
-            int lowThreshold = maxHP / 4;
-            int mediumThreshold = maxHP / 2;
-            int highThreshold = (3 * maxHP) / 4;
-
             foreach (var healthStatus in healthStatuses)
             {
                 foreach (var money in moneyValues)
@@ -566,7 +562,7 @@ public class AutonomousCharacter : NPC
         }
         else if (this.TabularQLearningActive)
         {
-            //ToDo
+            this.UpdateQL();
         }
         else if (this.NNLearningActive)
         {
@@ -776,6 +772,21 @@ public class AutonomousCharacter : NPC
         }
     }
 
+    private void UpdateQL()
+    {
+        string qHP = CalculateHP();
+        int currentStateIndex = this.TQLStates.FindIndex(state => state.QHP == qHP && state.QLevel == baseStats.Level && state.QMoney == baseStats.Money);
+
+        var executableActions = Actions.Where(action => action.CanExecute()).ToList();
+
+        int actionIndex = QLearning.ChooseAction(currentStateIndex);
+        Action selectedAction = executableActions[actionIndex];
+
+        float reward = this.Reward;
+        //QLearning.UpdateQValue(currentStateIndex,actionIndex,reward);
+        //ToDo
+    }
+
     private void UpdateNN()
     {
         float[] currentState = GetState();
@@ -787,6 +798,31 @@ public class AutonomousCharacter : NPC
 
         float reward = ExecuteAction(selectedAction);
         ReinforceLearningNN.StoreReward(reward);
+    }
+
+    private string CalculateHP()
+    {
+        int maxHP = baseStats.Level * 10;
+        int lowThreshold = maxHP / 4;
+        int mediumThreshold = maxHP / 2;
+        int highThreshold = (3 * maxHP) / 4;
+
+        if (baseStats.HP <= lowThreshold)
+        {
+            return "Baixo";
+        }
+        else if (baseStats.HP <= mediumThreshold)
+        {
+            return "Medio";
+        }
+        else if (baseStats.HP <= highThreshold)
+        {
+            return "Alto";
+        }
+        else
+        {
+            return "Cheio";
+        }
     }
 
     private float[] GetState()
