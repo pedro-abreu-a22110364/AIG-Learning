@@ -16,6 +16,7 @@ using Assets.Scripts.IAJ.Unity.DecisionMaking;
 using RL;
 using System.Linq;
 using System.IO;
+using static UnityEditor.VersionControl.Asset;
 
 public class AutonomousCharacter : NPC
 {
@@ -133,9 +134,16 @@ public class AutonomousCharacter : NPC
     public GameObject NearEnemy { get; private set; }
 
     //For Reinforcement Learning
+    public List<TQLState> TQLStates = new List<TQLState>();
+
     public float Reward;
     public int MaxEpisodes = 100;
+    public int MaxSteps = 100;
     public float LearningRate = 0.05f;
+    public float DiscountRate = 0.9f;
+    public float Epsilon = 1.0f;
+    public float EpsilonDecay = 0.995f;
+    public float MinEpsilon = 0.01f;
     public int episodeCounter = 1;
 
     public float StopTime { get; set; }
@@ -295,7 +303,28 @@ public class AutonomousCharacter : NPC
             }
             else if (this.TabularQLearningActive)
             {
-                throw new Exception("Needs to be Created");
+                switch (RLLOptions)
+                {
+                    case RLOptions.LoadAndPlay:
+                        //ToDo
+                        break;
+
+                    case RLOptions.TrainAndSave:
+                        CreateTQLStates();
+                        this.QLearning = new QLearning(
+                            this.Actions,
+                            this.TQLStates,
+                            this.MaxEpisodes,
+                            this.MaxSteps,
+                            this.LearningRate,
+                            this.DiscountRate,
+                            this.Epsilon,
+                            this.EpsilonDecay,
+                            this.MinEpsilon
+                        );
+                        break;
+                }
+                
             }
             else if (this.NNLearningActive)
             {
@@ -330,6 +359,37 @@ public class AutonomousCharacter : NPC
         }
 
         DiaryText.text += "My Diary \n I awoke. What a wonderful day to kill Monsters! \n";
+    }
+
+    private void CreateTQLStates()
+    {
+        //Estados:
+        //Vida(baixo, médio, alto, cheio)
+        //Nível(1, 2, 3, 4)
+        //Dinheiro(0, 5, 10, 15, 20, 25)
+        //4 x 4 x 6 = 96 estados possíveis
+
+        string[] healthStatuses = { "Baixo", "Medio", "Alto", "Cheio" };
+        int[] levels = { 1, 2, 3, 4 };
+        int[] moneyValues = { 0, 5, 10, 15, 20, 25 };
+
+        foreach (var level in levels)
+        {
+            int maxHP = level * 10;
+            int lowThreshold = maxHP / 4;
+            int mediumThreshold = maxHP / 2;
+            int highThreshold = (3 * maxHP) / 4;
+
+            foreach (var healthStatus in healthStatuses)
+            {
+                foreach (var money in moneyValues)
+                {
+                    TQLStates.Add(new TQLState(healthStatus, level, money));
+                }
+            }
+        }
+
+        Debug.Log($"Total States Created: {TQLStates.Count}");
     }
 
     private void InitializeNewModel()
@@ -428,7 +488,16 @@ public class AutonomousCharacter : NPC
             }
             else if (TabularQLearningActive)
             {
-                throw new Exception("Tabular Q-Learning Needs to be initialized...");
+                switch (RLLOptions)
+                {
+                    case RLOptions.LoadAndPlay:
+                        //ToDo
+                        break;
+
+                    case RLOptions.TrainAndSave:
+                        this.QLearning.InitializeQLearning();
+                        break;
+                }
             }
             else if (NNLearningActive)
             {
@@ -494,6 +563,10 @@ public class AutonomousCharacter : NPC
         else if (this.GOBActive)
         {
             this.UpdateGOB();
+        }
+        else if (this.TabularQLearningActive)
+        {
+            //ToDo
         }
         else if (this.NNLearningActive)
         {

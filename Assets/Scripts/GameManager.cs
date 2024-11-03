@@ -232,6 +232,10 @@ public class GameManager : MonoBehaviour
                     //this.enemies.Remove(enemy);
                     this.DisposableObjects[enemy.name] = null;
                     enemy.SetActive(false);
+                    if (RLActive)
+                    {
+                        Character.Reward += 10f;
+                    }
                 }
             }
             else
@@ -240,6 +244,10 @@ public class GameManager : MonoBehaviour
                 //this.enemies.Remove(enemy);
                 this.DisposableObjects[enemy.name] = null;
                 enemy.SetActive(false);
+                if (RLActive)
+                {
+                    Character.Reward += 10f;
+                }
             }
 
             this.Character.baseStats.XP += enemyData.XPvalue;
@@ -304,6 +312,10 @@ public class GameManager : MonoBehaviour
                 if (remainingDamage > 0)
                 {
                     this.Character.baseStats.HP -= remainingDamage;
+                    if (RLActive)
+                    {
+                        Character.Reward -= 5f;
+                    }
                     this.Character.AddToDiary(" I was wounded with " + remainingDamage + " damage");
                 }
 
@@ -352,6 +364,10 @@ public class GameManager : MonoBehaviour
             this.DisposableObjects[chest.name] = null;
             chest.SetActive(false);
             this.Character.baseStats.Money += 5;
+            if (RLActive)
+            {
+                Character.Reward += 15f;
+            }
             this.WorldChanged = true;
         }
     }
@@ -377,6 +393,10 @@ public class GameManager : MonoBehaviour
             this.DisposableObjects[potion.name] = null;
             potion.SetActive(false);
             this.Character.baseStats.HP = this.Character.baseStats.MaxHP;
+            if (RLActive)
+            {
+                Character.Reward += 10f;
+            }
             this.WorldChanged = true;
         }
     }
@@ -399,6 +419,10 @@ public class GameManager : MonoBehaviour
                 this.Character.baseStats.MaxHP += 10;
                 this.Character.baseStats.XP = 0;
                 this.Character.AddToDiary(" I leveled up to level " + this.Character.baseStats.Level);
+                if (RLActive)
+                {
+                    Character.Reward += 15f;
+                }
                 this.Character.LevelingUp = false;
                 this.WorldChanged = true;
             }

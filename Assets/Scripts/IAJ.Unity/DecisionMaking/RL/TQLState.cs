@@ -12,6 +12,15 @@ namespace RL
 {
     public class TQLState
     {
-        //ToDo
+        public string QHP {  get; set; }
+        public int QLevel { get; set; }
+        public int QMoney { get; set; }
+
+        public TQLState(string qHP, int qLevel, int qMoney) 
+        {
+            this.QHP = qHP;
+            this.QLevel = qLevel;
+            this.QMoney = qMoney;
+        }
     }
 }
