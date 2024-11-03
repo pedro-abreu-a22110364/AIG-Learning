@@ -133,6 +133,7 @@ public class AutonomousCharacter : NPC
     public QLearning QLearning { get; set;} 
 
     public REINFORCE ReinforceLearningNN { get; set; }
+    //public altREINFORCE ReinforceLearningNN { get; set; }
     public GameObject NearEnemy { get; private set; }
 
     //For Reinforcement Learning
@@ -337,6 +338,7 @@ public class AutonomousCharacter : NPC
                         {
                             // Load the model
                             ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+                            //ReinforceLearningNN = new altREINFORCE(layerSizes, LearningRate);
                             ReinforceLearningNN.policyNetwork.LoadModel();
                             Debug.Log("Model loaded successfully for play.");
                         }
@@ -399,6 +401,7 @@ public class AutonomousCharacter : NPC
         layerSizes = new int[] { FIRST_LAYER, INNER_LAYER, INNER_LAYER, INNER_LAYER, LAST_LAYER };
 
         ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+        //ReinforceLearningNN = new altREINFORCE(layerSizes, LearningRate);
     }
 
     void FixedUpdate()
@@ -504,6 +507,7 @@ public class AutonomousCharacter : NPC
                         {
                             // Load the model
                             ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
+                            //ReinforceLearningNN = new altREINFORCE(layerSizes, LearningRate);
                             ReinforceLearningNN.policyNetwork.LoadModel();
                             Debug.Log("Model loaded successfully for play.");
                         }
