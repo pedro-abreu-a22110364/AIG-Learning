@@ -33,6 +33,9 @@ public class AutonomousCharacter : NPC
     public const float ENEMY_DETECTION_RADIUS = 10.0f;
     public const int REST_HP_RECOVERY = 2;
     public const float SPEED = 8.0f;
+    public const int FIRST_LAYER = 6;
+    public const int INNER_LAYER = 10;
+    public const int LAST_LAYER = 3;
 
 
 
@@ -90,7 +93,6 @@ public class AutonomousCharacter : NPC
     [Header("RL Options")]
     public RLOptions RLLOptions;
     
-    public int RLL_NumberOfLayers = 10;
     public int[] layerSizes;
 
     [Header("Decision Algorithm Options")]
@@ -394,14 +396,7 @@ public class AutonomousCharacter : NPC
 
     private void InitializeNewModel()
     {
-        /*layerSizes = new int[RLL_NumberOfLayers];
-        System.Random random = new System.Random();
-
-        for (int i = 0; i < RLL_NumberOfLayers; i++)
-        {
-            layerSizes[i] = random.Next(5, 100);
-        }*/
-        layerSizes = new int[] { 6, 10, 10, 10, 3 };
+        layerSizes = new int[] { FIRST_LAYER, INNER_LAYER, INNER_LAYER, INNER_LAYER, LAST_LAYER };
 
         ReinforceLearningNN = new REINFORCE(layerSizes, LearningRate);
     }
@@ -788,18 +783,6 @@ public class AutonomousCharacter : NPC
 
         float reward = ExecuteAction(selectedAction);
         ReinforceLearningNN.StoreReward(reward);
-
-        /*if (baseStats.HP == 0) // At the end of an episode
-        {
-            ReinforceLearningNN.UpdatePolicy();
-            ReinforceLearningNN.ResetRewards();
-
-            if (RLLOptions == RLOptions.TrainAndSave)
-            {
-                ReinforceLearningNN.policyNetwork.SaveModel();
-                Debug.Log("Model saved at end of episode.");
-            }
-        }*/
     }
 
     private float[] GetState()
@@ -819,23 +802,18 @@ public class AutonomousCharacter : NPC
 
     private float ExecuteAction(Action selectedAction)
     {
-        // Execute the action
         if (selectedAction.CanExecute())
             selectedAction.Execute();
 
-        // Initialize the reward variable
         float reward = 0f;
 
-        // Check character states to calculate rewards or penalties
         if (this.baseStats.HP <= 0 || this.baseStats.Time >= GameConstants.TIME_LIMIT)
         {
             reward -= 100f; // Penalty for dying or time out
-            //this.Reward = reward;
         }
         else if (this.baseStats.Money >= 25)
         {
             reward += 100f; // Reward for victory
-            //this.Reward = reward;
         }
 
         return reward;
